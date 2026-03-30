@@ -1,0 +1,22 @@
+services:
+  ws-server:
+    build:
+      context: ./tests/server
+      dockerfile: Dockerfile
+    ports:
+      - "9876:9876"
+    environment:
+      PORT: "9876"
+      AUTH_TOKEN: "test-token"
+      AUTH_STRATEGY: "authMessage"
+
+  example-frontend:
+    build:
+      context: ./examples/browser
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dist:/usr/share/nginx/html/dist:ro
+    depends_on:
+      - ws-server

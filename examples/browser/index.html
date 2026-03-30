@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celerity WS Client — Manual Test</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        background: #0f0f0f;
+        color: #e0e0e0;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 16px;
+        color: #fff;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        max-width: 960px;
+      }
+      .panel {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .panel h2 {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #888;
+        margin-bottom: 12px;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        color: #999;
+        margin-bottom: 4px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 6px 8px;
+        background: #111;
+        border: 1px solid #444;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+      }
+      button {
+        padding: 6px 14px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+      .btn-connect {
+        background: #2563eb;
+        color: #fff;
+      }
+      .btn-connect:hover {
+        background: #1d4ed8;
+      }
+      .btn-disconnect {
+        background: #dc2626;
+        color: #fff;
+      }
+      .btn-disconnect:hover {
+        background: #b91c1c;
+      }
+      .btn-send {
+        background: #16a34a;
+        color: #fff;
+      }
+      .btn-send:hover {
+        background: #15803d;
+      }
+      .btn-clear {
+        background: #333;
+        color: #ccc;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .status-disconnected {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+      .status-connecting {
+        background: #78350f;
+        color: #fde68a;
+      }
+      .status-ready {
+        background: #14532d;
+        color: #86efac;
+      }
+      .status-authenticating {
+        background: #1e3a5f;
+        color: #93c5fd;
+      }
+      .status-handshaking {
+        background: #78350f;
+        color: #fde68a;
+      }
+      .status-reconnecting {
+        background: #78350f;
+        color: #fde68a;
+      }
+      .status-disconnecting {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+      .log {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 0.75rem;
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 8px;
+        height: 320px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        line-height: 1.5;
+      }
+      .log-in {
+        color: #86efac;
+      }
+      .log-out {
+        color: #93c5fd;
+      }
+      .log-event {
+        color: #fde68a;
+      }
+      .log-error {
+        color: #fca5a5;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+      .send-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .caps {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 8px;
+      }
+      .caps span {
+        color: #e0e0e0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Celerity WS Client — Manual Test Console</h1>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Connection</h2>
+        <label for="url">Server URL</label>
+        <input id="url" value="ws://localhost:9876" />
+
+        <label for="auth-strategy">Auth Strategy</label>
+        <select id="auth-strategy">
+          <option value="none">None</option>
+          <option value="authMessage">authMessage</option>
+        </select>
+
+        <label for="token">Token</label>
+        <input id="token" value="test-token" placeholder="Auth token" />
+
+        <div class="actions">
+          <button id="btn-connect" class="btn-connect">Connect</button>
+          <button id="btn-disconnect" class="btn-disconnect" disabled>Disconnect</button>
+        </div>
+
+        <div>State: <span id="state" class="status status-disconnected">disconnected</span></div>
+        <div class="caps" id="caps"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Send Message</h2>
+        <label for="route">Route</label>
+        <input id="route" value="chat" placeholder="Route key" />
+
+        <label for="msg-data">Data (JSON)</label>
+        <input id="msg-data" value='{"text":"hello"}' placeholder='{"key":"value"}' />
+
+        <div class="send-row">
+          <button id="btn-send" class="btn-send" disabled>Send JSON</button>
+          <label
+            style="
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              font-size: 0.8rem;
+              margin: 0;
+            "
+          >
+            <input type="checkbox" id="ack-flag" /> Request Ack
+          </label>
+        </div>
+      </div>
+
+      <div class="panel full-width">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+          "
+        >
+          <h2 style="margin: 0">Log</h2>
+          <button id="btn-clear" class="btn-clear">Clear</button>
+        </div>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { createWsClient } from "/dist/index.browser.js";
+
+      const ui = {
+        url: document.getElementById("url"),
+        authStrategy: document.getElementById("auth-strategy"),
+        token: document.getElementById("token"),
+        btnConnect: document.getElementById("btn-connect"),
+        btnDisconnect: document.getElementById("btn-disconnect"),
+        btnSend: document.getElementById("btn-send"),
+        btnClear: document.getElementById("btn-clear"),
+        state: document.getElementById("state"),
+        caps: document.getElementById("caps"),
+        route: document.getElementById("route"),
+        msgData: document.getElementById("msg-data"),
+        ackFlag: document.getElementById("ack-flag"),
+        log: document.getElementById("log"),
+      };
+
+      let client = null;
+
+      function log(type, text) {
+        const el = document.createElement("div");
+        el.className = `log-entry log-${type}`;
+        const ts = new Date().toISOString().substring(11, 23);
+        el.textContent = `[${ts}] ${text}`;
+        ui.log.appendChild(el);
+        ui.log.scrollTop = ui.log.scrollHeight;
+      }
+
+      function updateState() {
+        const s = client?.state ?? "disconnected";
+        ui.state.textContent = s;
+        ui.state.className = `status status-${s}`;
+        ui.btnConnect.disabled = s !== "disconnected";
+        ui.btnDisconnect.disabled = s === "disconnected";
+        ui.btnSend.disabled = s !== "ready";
+      }
+
+      async function connect() {
+        const strategy = ui.authStrategy.value;
+        const config = {
+          url: ui.url.value,
+          heartbeat: { interval: 10000, timeout: 5000 },
+        };
+
+        if (strategy === "authMessage") {
+          config.auth = { strategy: "authMessage", token: ui.token.value };
+        }
+
+        client = createWsClient(config);
+
+        client.on("connected", () => {
+          log("event", "connected");
+          updateState();
+        });
+
+        client.on("authenticated", (userInfo) => {
+          log("event", `authenticated: ${JSON.stringify(userInfo)}`);
+          updateState();
+          const caps = client.capabilities;
+          ui.caps.innerHTML = caps?.binary
+            ? "Capabilities: <span>full</span>"
+            : "Capabilities: <span>constrained</span>";
+        });
+
+        client.on("authFailed", (error) => {
+          log("error", `auth failed: ${error.message}`);
+          updateState();
+        });
+
+        client.on("disconnected", (info) => {
+          log(
+            "event",
+            `disconnected: code=${info.code} reason="${info.reason}" willReconnect=${info.willReconnect}`,
+          );
+          updateState();
+        });
+
+        client.on("reconnecting", (info) => {
+          log("event", `reconnecting: attempt=${info.attempt} delay=${info.delay}ms`);
+          updateState();
+        });
+
+        client.on("error", (error) => {
+          log("error", error.message);
+        });
+
+        client.on("lostMessage", (info) => {
+          log("error", `lost message: ${JSON.stringify(info)}`);
+        });
+
+        client.on("debug", (e) => {
+          log("event", `[debug] ${e.event}`);
+        });
+
+        log("event", `Connecting to ${config.url}...`);
+        updateState();
+
+        try {
+          await client.connect();
+          updateState();
+          const caps = client.capabilities;
+          if (!config.auth) {
+            ui.caps.innerHTML = caps?.binary
+              ? "Capabilities: <span>full</span>"
+              : "Capabilities: <span>constrained</span>";
+          }
+        } catch (err) {
+          log("error", `connect failed: ${err.message}`);
+          updateState();
+        }
+      }
+
+      async function disconnect() {
+        if (!client) return;
+        await client.disconnect();
+        updateState();
+      }
+
+      function sendMessage() {
+        if (!client || client.state !== "ready") return;
+
+        const route = ui.route.value;
+        let data;
+        try {
+          data = JSON.parse(ui.msgData.value);
+        } catch {
+          data = ui.msgData.value;
+        }
+
+        if (ui.ackFlag.checked) {
+          log("out", `sendWithAck("${route}", ${JSON.stringify(data)})`);
+          client
+            .sendWithAck(route, data)
+            .then((ack) => {
+              log("in", `ack received: ${JSON.stringify(ack)}`);
+            })
+            .catch((err) => {
+              log("error", `ack failed: ${err.message}`);
+            });
+        } else {
+          const msgId = client.send(route, data);
+          log("out", `send("${route}", ${JSON.stringify(data)}) msgId=${msgId}`);
+        }
+      }
+
+      // Listen for echoed messages on common routes
+      function setupEchoListener() {
+        if (!client) return;
+        const route = `echo_${ui.route.value}`;
+        client.on(route, (data, meta) => {
+          log("in", `[${meta.route}] ${JSON.stringify(data)}`);
+        });
+      }
+
+      ui.btnConnect.addEventListener("click", () => {
+        connect().then(setupEchoListener);
+      });
+      ui.btnDisconnect.addEventListener("click", disconnect);
+      ui.btnSend.addEventListener("click", () => {
+        setupEchoListener();
+        sendMessage();
+      });
+      ui.btnClear.addEventListener("click", () => {
+        ui.log.innerHTML = "";
+      });
+      ui.msgData.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !ui.btnSend.disabled) {
+          setupEchoListener();
+          sendMessage();
+        }
+      });
+    </script>
+  </body>
+</html>

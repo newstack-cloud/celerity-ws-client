@@ -1,0 +1,46 @@
+services:
+  ws-server:
+    build:
+      context: ./tests/server
+      dockerfile: Dockerfile
+    ports:
+      - "9876:9876"
+    environment:
+      PORT: "9876"
+      AUTH_TOKEN: "test-token"
+      AUTH_STRATEGY: "authMessage"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const ws = new (require('ws'))('ws://localhost:9876'); ws.on('open', () => { ws.close(); process.exit(0); }); ws.on('error', () => process.exit(1)); setTimeout(() => process.exit(1), 2000);",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 3s
+
+  ws-server-connect:
+    build:
+      context: ./tests/server
+      dockerfile: Dockerfile
+    ports:
+      - "9877:9877"
+    environment:
+      PORT: "9877"
+      AUTH_TOKEN: "test-token"
+      AUTH_STRATEGY: "connect"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const ws = new (require('ws'))('ws://localhost:9877'); ws.on('open', () => { ws.close(); process.exit(0); }); ws.on('error', () => process.exit(1)); setTimeout(() => process.exit(1), 2000);",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 3s

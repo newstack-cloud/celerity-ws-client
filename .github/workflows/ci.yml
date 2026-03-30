@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run format:check
+
+      - run: pnpm audit --audit-level high
+
+      # lint:report uses || true so the JSON file is always written for SonarCloud,
+      # so we run lint first to actually fail the build on errors.
+      - name: Lint and generate ESLint report for SonarCloud
+        run: pnpm run lint && pnpm run lint:report
+
+      - run: pnpm run build
+
+      - run: pnpm run typecheck
+
+      - name: Run unit and integration tests with coverage
+        run: pnpm run test:with-integration
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
