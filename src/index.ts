@@ -20,6 +20,7 @@ export { CelerityWsClient } from "./client";
 export { NodeWebSocketFactory } from "./transport/node-factory";
 export { BrowserWebSocketFactory } from "./transport/browser-factory";
 export { CelerityCapabilityError } from "./types";
+export { WILDCARD_ROUTE } from "./events/router";
 export type {
   AckConfig,
   AckResponse,

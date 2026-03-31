@@ -131,6 +131,11 @@ client.on("chat.message", (data) => {
   /* ... */
 });
 
+// Wildcard route — receive all application messages regardless of route
+client.on("*", (data, metadata) => {
+  console.log(`Received message on route "${metadata.route}":`, data);
+});
+
 // Binary message routes
 client.onBinary("audio.chunk", (payload) => {
   /* ... */
