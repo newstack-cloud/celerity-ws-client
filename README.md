@@ -4,7 +4,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=newstack-cloud_celerity-ws-client&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=newstack-cloud_celerity-ws-client)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=newstack-cloud_celerity-ws-client&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=newstack-cloud_celerity-ws-client)
 
-TypeScript WebSocket client SDK for the [Celerity](https://celerityframework.com) Runtime Protocol. Works in both Node.js and the browser with zero runtime dependencies.
+TypeScript WebSocket client SDK for the [Celerity](https://celerityframework.com) Runtime Protocol. Works in both Node.js and the browser. Zero bundled dependencies for browser clients; Node.js requires the `ws` peer dependency.
 
 ## Features
 
@@ -12,7 +12,7 @@ TypeScript WebSocket client SDK for the [Celerity](https://celerityframework.com
 - Automatic reconnection with exponential backoff and jitter
 - Binary and JSON message support
 - Dual ESM/CJS output with separate browser and Node.js entry points
-- JSON property-based message routing
+- JSON property-based message routing with wildcard (`"*"`) support
 - Zero runtime dependencies for browser clients, `ws` is an optional peer dependency for Node.js.
 
 ## Installation
@@ -131,9 +131,15 @@ client.on("chat.message", (data) => {
   /* ... */
 });
 
-// Wildcard route — receive all application messages regardless of route
+// Wildcard route — receive all application messages regardless of route.
+// Wildcard handlers fire alongside route-specific handlers, not instead of them.
 client.on("*", (data, metadata) => {
   console.log(`Received message on route "${metadata.route}":`, data);
+});
+
+// Binary messages support the same wildcard pattern
+client.onBinary("*", (payload, metadata) => {
+  /* receives all binary messages */
 });
 
 // Binary message routes
