@@ -1,6 +1,6 @@
 {
   "name": "@celerity-sdk/ws-client",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "TypeScript WebSocket client SDK for the Celerity Runtime Protocol",
   "type": "module",
   "exports": {
