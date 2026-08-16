@@ -106,6 +106,12 @@ client.sendBinary("audio.chunk", audioBuffer);
 const ack = await client.sendBinaryWithAck("audio.chunk", audioBuffer);
 ```
 
+Acknowledgement runs the other way too. When a server message asks to be acknowledged, by
+carrying a `messageId` alongside `"ack": true` in JSON or the `requireAck` byte in binary, the
+client answers on receipt without the application having to do anything. A resend the
+deduplication window suppresses is still acknowledged, so a message that arrived the first time
+is not reported lost.
+
 ## Listening for Events
 
 ```typescript

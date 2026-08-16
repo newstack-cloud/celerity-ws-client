@@ -32,6 +32,22 @@ export function encodeBinaryMessage(
   return buffer;
 }
 
+/**
+ * Encodes an acknowledgement as a reserved binary frame:
+ * [0x1 0x4 0x0 0x0] followed by the JSON body naming the message and the time.
+ * The two trailing zero bytes say that the acknowledgement asks for none of its
+ * own and carries no id of its own.
+ */
+export function encodeBinaryAck(messageId: string, timestamp: string): Uint8Array {
+  const body = TEXT_ENCODER.encode(JSON.stringify({ messageId, timestamp }));
+
+  const frame = new Uint8Array(BINARY_PREFIX_LENGTH + body.length);
+  frame.set(BINARY_PREFIX.ACK, 0);
+  frame.set(body, BINARY_PREFIX_LENGTH);
+
+  return frame;
+}
+
 export type DecodedBinaryMessage = {
   routeKey: string;
   ack: boolean;

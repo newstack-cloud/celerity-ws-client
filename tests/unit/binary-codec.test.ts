@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  encodeBinaryAck,
   encodeBinaryMessage,
   decodeBinaryMessage,
   identifyBinaryControl,
@@ -82,6 +83,26 @@ describe("binary-codec", () => {
       data.set(jsonBytes, 4);
 
       expect(extractBinaryControlPayload(data)).toBe(json);
+    });
+  });
+
+  describe("encodeBinaryAck", () => {
+    it("should carry the reserved prefix and name the message", () => {
+      const frame = encodeBinaryAck("msg-1", "2026-01-01T00:00:00.000Z");
+
+      expect(identifyBinaryControl(frame)).toBe("ack");
+      expect(JSON.parse(extractBinaryControlPayload(frame))).toEqual({
+        messageId: "msg-1",
+        timestamp: "2026-01-01T00:00:00.000Z",
+      });
+    });
+
+    it("should ask for no acknowledgement of its own and carry no id of its own", () => {
+      const frame = encodeBinaryAck("msg-1", "2026-01-01T00:00:00.000Z");
+
+      // The requireAck byte and the messageIdLength byte of the framing.
+      expect(frame[2]).toBe(0x0);
+      expect(frame[3]).toBe(0x0);
     });
   });
 });

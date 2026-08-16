@@ -18,6 +18,18 @@ export function encodeJsonMessage(
   return JSON.stringify(message);
 }
 
+/**
+ * Encodes an acknowledgement as JSON text, for a transport that cannot carry
+ * binary frames. The key is `event` rather than the configured route key, as
+ * the reserved form is fixed by the protocol.
+ */
+export function encodeJsonAck(messageId: string, timestamp: string): string {
+  return JSON.stringify({
+    event: "ack",
+    data: { messageId, timestamp },
+  });
+}
+
 export function decodeJsonMessage(raw: string): {
   route: string | undefined;
   data: unknown;
