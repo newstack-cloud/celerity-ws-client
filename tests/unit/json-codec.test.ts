@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { encodeJsonMessage, decodeJsonMessage, extractRoute } from "../../src/protocol/json-codec";
+import {
+  encodeJsonAck,
+  encodeJsonMessage,
+  decodeJsonMessage,
+  extractRoute,
+} from "../../src/protocol/json-codec";
 
 describe("json-codec", () => {
   describe("encodeJsonMessage", () => {
@@ -54,6 +59,17 @@ describe("json-codec", () => {
 
     it("should return undefined for non-string value", () => {
       expect(extractRoute({ event: 123, data: {} }, "event")).toBeUndefined();
+    });
+  });
+
+  describe("encodeJsonAck", () => {
+    it("should use the reserved event key rather than the configured route key", () => {
+      const parsed = JSON.parse(encodeJsonAck("msg-1", "2026-01-01T00:00:00.000Z"));
+
+      expect(parsed).toEqual({
+        event: "ack",
+        data: { messageId: "msg-1", timestamp: "2026-01-01T00:00:00.000Z" },
+      });
     });
   });
 });

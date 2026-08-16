@@ -12,6 +12,7 @@ import { AckManager } from "./protocol/ack";
 import { AuthManager } from "./protocol/auth";
 import {
   decodeBinaryMessage,
+  encodeBinaryAck,
   encodeBinaryMessage,
   extractBinaryControlPayload,
   identifyBinaryControl,
@@ -24,8 +25,13 @@ import {
 import { CLOSE_CODES } from "./protocol/constants";
 import { DeduplicationStore } from "./protocol/dedup";
 import { HeartbeatManager } from "./protocol/heartbeat";
-import { decodeJsonMessage, encodeJsonMessage, extractRoute } from "./protocol/json-codec";
-import { getRecord, getString, parseJsonPayload } from "./protocol/parse";
+import {
+  decodeJsonMessage,
+  encodeJsonAck,
+  encodeJsonMessage,
+  extractRoute,
+} from "./protocol/json-codec";
+import { getBoolean, getRecord, getString, parseJsonPayload } from "./protocol/parse";
 import { MessageBuffer } from "./reconnect/buffer";
 import { ReconnectManager } from "./reconnect/manager";
 import { ConnectionStateMachine } from "./state/machine";
@@ -595,6 +601,14 @@ export class CelerityWsClient {
     const decoded = decodeBinaryMessage(bytes);
     if (!decoded) return true;
 
+    // Send ack ahead of the deduplication check, as a resend the client has already seen
+    // is still one the server is waiting to hear about. Suppressing the
+    // acknowledgement along with the delivery would leave it resending until it
+    // gave up on a message that arrived the first time.
+    if (decoded.ack && decoded.messageId) {
+      this.sendAck(decoded.messageId);
+    }
+
     if (this.dedupStore.has(decoded.messageId)) return true;
     this.dedupStore.track(decoded.messageId);
 
@@ -647,9 +661,17 @@ export class CelerityWsClient {
     const route = extractRoute(parsed, this.config.routeKey) ?? extractRoute(parsed, "event");
 
     if (this.handleControlRoute(route, parsed)) return;
-    if (!route) return;
 
     const messageId = decoded.messageId ?? "";
+
+    // Before the route check as well as the deduplication one. A message the
+    // client cannot dispatch still arrived, and the server is owed the answer
+    // either way.
+    if (getBoolean(parsed, "ack") && messageId) {
+      this.sendAck(messageId);
+    }
+
+    if (!route) return;
     if (this.dedupStore.has(messageId || undefined)) return;
     this.dedupStore.track(messageId || undefined);
 
@@ -692,6 +714,28 @@ export class CelerityWsClient {
         caller: (data ? getString(data, "caller") : undefined) ?? "",
       });
     }
+  }
+
+  // Answers a message that asked to be acknowledged. The form follows the
+  // negotiated capabilities rather than the form the message arrived in, since
+  // a transport that cannot carry binary frames cannot carry the reply in one
+  // either.
+  private sendAck(messageId: string): void {
+    if (!this.ws || this.ws.readyState() !== WebSocketState.OPEN) return;
+
+    const timestamp = new Date().toISOString();
+    const frame =
+      this._capabilities?.ackFormat === "binary"
+        ? encodeBinaryAck(messageId, timestamp)
+        : encodeJsonAck(messageId, timestamp);
+
+    try {
+      this.ws.send(frame);
+    } catch (err) {
+      this.debug("ack:sendFailed", { messageId, error: String(err) });
+      return;
+    }
+    this.debug("ack:sent", { messageId });
   }
 
   private handleHeartbeatTimeout(): void {
