@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/newstack-cloud/celerity-ws-client/compare/v0.3.1...v0.4.0) (2026-08-16)
+
+
+### Features
+
+* add support for server requested acknowledgements ([1e4d75d](https://github.com/newstack-cloud/celerity-ws-client/commit/1e4d75d58300ae3e6eab3d80f3b1f396ded01155))
+
 ## [0.3.1](https://github.com/newstack-cloud/celerity-ws-client/compare/v0.3.0...v0.3.1) (2026-04-01)
 
 
