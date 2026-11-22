@@ -73,10 +73,10 @@ To manage Docker services yourself for iterative development:
 
 ```bash
 # Start services in the background
-docker compose -f docker-compose.test.yml up -d --wait
+docker compose -f docker-compose.test.yml up -d --build --wait
 
 # Run all tests directly (services already running)
-VITEST_INCLUDE_INTEGRATION=true vitest run --config vitest.all.config.ts
+pnpm exec vitest run --config vitest.all.config.ts --coverage
 
 # Stop services
 docker compose -f docker-compose.test.yml down -v
@@ -86,7 +86,7 @@ docker compose -f docker-compose.test.yml down -v
 
 This project uses [conventional commits](https://www.conventionalcommits.org/) enforced by commitlint.
 
-Format: `type(scope): description`
+Format: `type: description`. commitlint rejects a scope.
 
 **Types**: `feat`, `fix`, `build`, `revert`, `wip`, `chore`, `ci`, `docs`, `style`, `refactor`, `perf`, `test`, `instr`, `deps`
 
