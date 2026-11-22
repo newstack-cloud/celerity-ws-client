@@ -67,7 +67,7 @@ message, token `test-token`) and the example frontend on `http://localhost:8080`
 
 - **Protocol:** the client must keep working with released Celerity runtimes. The server side
   is in celerity's `libs/runtime` (`core/src/websocket.rs`, `ws/ws-registry`, `ws/ws-redis`,
-  `helpers/src/websockets.rs`), and the protocol is documented in celerity-docs-v2
+  `helpers/src/websockets.rs`), and the protocol is documented in celerity-docs
   (`content/docs/framework/runtime/websocket-runtime-protocol.mdx`). Change the runtime and
   the protocol doc first; `tests/server/` only mirrors them, so passing tests don't show the
   runtime agrees.
