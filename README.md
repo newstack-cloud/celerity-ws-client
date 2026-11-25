@@ -4,7 +4,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=newstack-cloud_celerity-ws-client&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=newstack-cloud_celerity-ws-client)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=newstack-cloud_celerity-ws-client&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=newstack-cloud_celerity-ws-client)
 
-TypeScript WebSocket client SDK for the [Celerity](https://celerityframework.com) Runtime Protocol. Works in both Node.js and the browser. Zero bundled dependencies for browser clients; Node.js requires the `ws` peer dependency.
+TypeScript WebSocket client SDK for the [Celerity](https://celerity.dev) Runtime Protocol. Works in both Node.js and the browser. Zero bundled dependencies for browser clients; Node.js requires the `ws` peer dependency.
 
 ## Features
 
